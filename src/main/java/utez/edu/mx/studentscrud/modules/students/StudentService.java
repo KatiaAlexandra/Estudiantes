@@ -23,9 +23,16 @@ public class StudentService {
 
     public Student save(Student student){
         List<Student> students = findAll();
-
-        if(student.getName()==null || student.getStudentIdentifier() == null || student.getCareer()== null || student.getEmail() == null || student.getM_lastname()== null || student.getP_lastname() == null){
+        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        if(student.getName()==null || student.getStudentIdentifier() == null
+                || student.getCareer()== null || student.getEmail() == null || student.getM_lastname()== null
+                || student.getP_lastname() == null)
+        {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Todos los campos deben estar llenos");
+        }
+
+        if(!student.getEmail().matches(regex)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Introduce un correo válido");
         }
 
         for(Student s: students){
