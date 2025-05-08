@@ -22,7 +22,27 @@ public class StudentService {
     }
 
     public Student save(Student student){
-        List<Student> students = findAll();
+        validateStudent(student,false);
+        return studentRepository.save(student);
+    }
+
+    public Student update(Student student){
+        studentRepository.findById(student.getId()).
+                orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el estudiante"));
+        validateStudent(student,true);
+      return studentRepository.save(student);
+    }
+
+    public boolean delete(String id){
+        Student found = studentRepository.findById(id).orElse(null);
+        if(found != null){
+            studentRepository.delete(found);
+            return true;
+        }
+       return false;
+    }
+
+    private boolean validateStudent(Student student, boolean isUpdate){
         String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
         if(student.getName()==null || student.getStudentIdentifier() == null
                 || student.getCareer()== null || student.getEmail() == null || student.getM_lastname()== null
@@ -35,36 +55,18 @@ public class StudentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Introduce un correo válido");
         }
 
+        List<Student> students = studentRepository.findAll();
+
+        if(isUpdate) {
+            students.removeIf(s -> s.getId().equals(student.getId()));
+        }
+
         for(Student s: students){
             if(s.getStudentIdentifier().equalsIgnoreCase(student.getStudentIdentifier())){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La matrícula ya está registrada");
             }
         }
-        return studentRepository.save(student);
-    }
 
-    public Student update(Student student){
-        Student found = studentRepository.findById(student.getId()).
-                orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el estudiante"));
-        String studentIdentifier = found.getStudentIdentifier();
-
-        if(!found.getStudentIdentifier().equalsIgnoreCase(studentIdentifier)){
-            List<Student> students = studentRepository.findAll();
-            for(Student s: students){
-                if(s.getStudentIdentifier().equalsIgnoreCase(studentIdentifier)){
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La matrícula ya está registrada");
-                }
-            }
-        }
-      return studentRepository.save(student);
-    }
-
-    public boolean delete(String id){
-        Student found = studentRepository.findById(id).orElse(null);
-        if(found != null){
-            studentRepository.delete(found);
-            return true;
-        }
-       return false;
+        return true;
     }
 }
